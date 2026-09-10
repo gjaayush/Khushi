@@ -10,7 +10,9 @@ export default function CameraModel() {
   const { scene } = useGLTF("/models/pentax_k-1_dslr.glb");
 
   // Dynamic responsive scale tailored for desktop, iPad, and mobile
-  const [deviceScale, setDeviceScale] = useState(2.85);
+  // Calibrated so DSLR visually occupies 40-70% visual height on Desktop,
+  // 35-60% on Tablet, and 35-50% on Mobile
+  const [deviceScale, setDeviceScale] = useState(3.95);
 
   // Mouse & Pointer interaction state
   const mousePos = useRef({ x: 0, y: 0 });
@@ -25,17 +27,17 @@ export default function CameraModel() {
     const handleResize = () => {
       const w = window.innerWidth;
       if (w < 640) {
-        // Mobile
-        setDeviceScale(2.2);
+        // Mobile (occupies ~40-52% viewport height)
+        setDeviceScale(2.9);
       } else if (w < 1024) {
-        // Tablet / iPad (768px - 1023px)
-        setDeviceScale(2.55);
+        // Tablet / iPad (occupies ~45-60% viewport height)
+        setDeviceScale(3.5);
       } else if (w < 1440) {
-        // Laptops & standard desktop
-        setDeviceScale(2.85);
+        // Laptops & standard desktop (occupies ~55-70% viewport height)
+        setDeviceScale(3.95);
       } else {
         // Large desktop / Ultrawide
-        setDeviceScale(3.15);
+        setDeviceScale(4.25);
       }
     };
 
@@ -133,10 +135,12 @@ export default function CameraModel() {
             !nameLower.includes("hood") &&
             !nameLower.includes("daf85mms")
           ) {
-            // Optical glass element: deep, anti-reflective, high index
-            mat.roughness = 0.03;
-            mat.metalness = 0.25;
-            mat.color = new THREE.Color("#16202c");
+            // Optical glass element: deep, multi-coated anti-reflective glass
+            mat.roughness = 0.02;
+            mat.metalness = 0.2;
+            mat.color = new THREE.Color("#101b26");
+            mat.clearcoat = 1.0;
+            mat.clearcoatRoughness = 0.03;
           } else {
             // Textured matte magnesium DSLR body and knurled alloy dials
             mat.roughness = 0.48;

@@ -77,7 +77,7 @@ export default function PhotoSequence({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full h-screen bg-[#060608] flex items-center justify-center overflow-hidden ${className}`}
+      className={`relative w-full h-screen bg-transparent flex items-center justify-center overflow-hidden ${className}`}
     >
       {/* Main Container */}
       <div className="relative z-10 w-full max-w-5xl px-4 sm:px-6 md:px-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 lg:gap-14">

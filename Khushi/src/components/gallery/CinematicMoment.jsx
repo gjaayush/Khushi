@@ -1,6 +1,8 @@
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { cameraState, getMomentChoreography } from "../../animations/cameraTimeline";
+import { playShutterClick } from "../../utils/audioShutter";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -8,7 +10,7 @@ export default function CinematicMoment({
   photo,
   index = 0,
   align = "left", // 'left' | 'right' | 'center'
-  cameraRotationDeg = 0, // Target Y rotation in degrees for this moment
+  cameraRotationDeg = 0,
   isHero = false,
   className = "",
 }) {
@@ -17,75 +19,301 @@ export default function CinematicMoment({
   const flashRef = useRef(null);
   const textRef = useRef(null);
   const exifRef = useRef(null);
+  const hasClicked = useRef(false);
 
   useEffect(() => {
     if (!stageRef.current) return;
 
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+    const isTablet = typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1024;
+
+    const choreo = getMomentChoreography({
+      chapter: photo.chapter,
+      index,
+      align,
+      isMobile,
+      isTablet,
+    });
+
     const ctx = gsap.context(() => {
-      // Create ScrollTrigger timeline for photograph reveal & hold
+      // Proxy object representing 3D camera state during this pinned moment
+      const poseProxy = {
+        camX: choreo.entryPose.camX,
+        camY: choreo.entryPose.camY,
+        camZ: choreo.entryPose.camZ,
+        targetX: choreo.entryPose.targetX,
+        targetY: choreo.entryPose.targetY,
+        targetZ: choreo.entryPose.targetZ,
+        modelX: choreo.entryPose.modelX,
+        modelY: choreo.entryPose.modelY,
+        modelZ: choreo.entryPose.modelZ,
+        modelRotX: choreo.entryPose.modelRotX,
+        modelRotY: choreo.entryPose.modelRotY,
+        modelRotZ: choreo.entryPose.modelRotZ,
+        modelScaleMultiplier: choreo.entryPose.scale,
+      };
+
+      // Apply initial pose proxy to cameraState on frame
+      const syncCamera = () => {
+        cameraState.camX = poseProxy.camX;
+        cameraState.camY = poseProxy.camY;
+        cameraState.camZ = poseProxy.camZ;
+        cameraState.targetX = poseProxy.targetX;
+        cameraState.targetY = poseProxy.targetY;
+        cameraState.targetZ = poseProxy.targetZ;
+        cameraState.modelX = poseProxy.modelX;
+        cameraState.modelY = poseProxy.modelY;
+        cameraState.modelZ = poseProxy.modelZ;
+        cameraState.modelRotX = poseProxy.modelRotX;
+        cameraState.modelRotY = poseProxy.modelRotY;
+        cameraState.modelRotZ = poseProxy.modelRotZ;
+        cameraState.modelScaleMultiplier = poseProxy.modelScaleMultiplier;
+      };
+
+      // Scrubbed Pinned Film Sequence
+      // 0% - 25%: Camera sweeps into frame through 3D space
+      // 25% - 45%: Camera turns toward user (lens view)
+      // 45% - 70%: LENS APPROACHES (physically expands, huge close-up)
+      // 70% - 78%: Short settle in sharp focus
+      // 78% - 82%: SHUTTER MOMENT (flash bloom + audio click + aperture pulse)
+      // 82% - 92%: PHOTO REVEAL + CAMERA PULLS BACK TO COMPANION POSE
+      // 92% - 100%: Photo drifts & dissolves, camera glides away to next memory
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: stageRef.current,
-          start: "top 85%",
-          end: "bottom 15%",
-          scrub: 1.2,
+          start: "top top",
+          end: "+=135%",
+          pin: true,
+          scrub: 0.9,
+          anticipatePin: 1,
+          onUpdate: (self) => {
+            // Audio shutter click trigger with hysteresis
+            if (self.progress >= 0.77 && self.progress <= 0.84) {
+              if (!hasClicked.current) {
+                playShutterClick(0.35);
+                hasClicked.current = true;
+              }
+            } else if (self.progress < 0.72 || self.progress > 0.88) {
+              hasClicked.current = false;
+            }
+          },
         },
+        onUpdate: syncCamera,
       });
 
-      // 1. Shutter Flash / Aperture pulse at entry (CAMERA -> CLICK)
-      tl.fromTo(
-        flashRef.current,
-        { opacity: 0, scale: 0.6 },
-        { opacity: 0.7, scale: 1.4, duration: 0.12, ease: "power2.out" },
-        0.1
-      ).to(
-        flashRef.current,
-        { opacity: 0, scale: 1.8, duration: 0.2, ease: "power2.in" },
-        0.22
+      // Initially, photo card and text are invisible (camera is the hero)
+      gsap.set(cardRef.current, { opacity: 0, scale: 0.85, y: 35 });
+      gsap.set([textRef.current, exifRef.current], { opacity: 0, y: 20 });
+      gsap.set(flashRef.current, { opacity: 0, scale: 0.8 });
+
+      // PHASE A: 0.00 -> 0.25 (Travel through 3D space)
+      tl.to(
+        poseProxy,
+        {
+          camX: choreo.travelPose.camX,
+          camY: choreo.travelPose.camY,
+          camZ: choreo.travelPose.camZ,
+          modelX: choreo.travelPose.modelX,
+          modelY: choreo.travelPose.modelY,
+          modelZ: choreo.travelPose.modelZ,
+          modelRotX: choreo.travelPose.modelRotX,
+          modelRotY: choreo.travelPose.modelRotY,
+          modelRotZ: choreo.travelPose.modelRotZ,
+          modelScaleMultiplier: choreo.travelPose.scale,
+          duration: 0.25,
+          ease: "sine.inOut",
+        },
+        0.0
       );
 
-      // 2. Photo emerges from camera/lens area (PHOTO REVEALS with 100% clarity)
-      tl.fromTo(
-        cardRef.current,
-        { opacity: 0, scale: 0.85, y: 50 },
-        { opacity: 1, scale: 1.0, y: 0, duration: 0.35, ease: "power2.out" },
-        0.15
-      );
-
-      // 3. Text and metadata reveal
-      tl.fromTo(
-        [textRef.current, exifRef.current],
-        { opacity: 0, y: 25 },
-        { opacity: 1, y: 0, stagger: 0.08, duration: 0.3, ease: "power2.out" },
+      // PHASE B: 0.25 -> 0.45 (Turn toward user, lens facing front)
+      tl.to(
+        poseProxy,
+        {
+          camX: choreo.facingPose.camX,
+          camY: choreo.facingPose.camY,
+          camZ: choreo.facingPose.camZ,
+          modelX: choreo.facingPose.modelX,
+          modelY: choreo.facingPose.modelY,
+          modelZ: choreo.facingPose.modelZ,
+          modelRotX: choreo.facingPose.modelRotX,
+          modelRotY: choreo.facingPose.modelRotY,
+          modelRotZ: choreo.facingPose.modelRotZ,
+          modelScaleMultiplier: choreo.facingPose.scale,
+          duration: 0.2,
+          ease: "power2.inOut",
+        },
         0.25
       );
 
-      // 4. Photo holds crystal-clear focus in center of scroll (0.45 - 0.7)
+      // PHASE C: 0.45 -> 0.70 (LENS APPROACHES! Physically zooms in, lens expands huge)
+      tl.to(
+        poseProxy,
+        {
+          camX: choreo.lensApproachPose.camX,
+          camY: choreo.lensApproachPose.camY,
+          camZ: choreo.lensApproachPose.camZ,
+          modelX: choreo.lensApproachPose.modelX,
+          modelY: choreo.lensApproachPose.modelY,
+          modelZ: choreo.lensApproachPose.modelZ,
+          modelRotX: choreo.lensApproachPose.modelRotX,
+          modelRotY: choreo.lensApproachPose.modelRotY,
+          modelRotZ: choreo.lensApproachPose.modelRotZ,
+          modelScaleMultiplier: choreo.lensApproachPose.scale,
+          duration: 0.25,
+          ease: "power3.inOut",
+        },
+        0.45
+      );
 
-      // 5. Photo drifts downward and dissolves (PHOTO DRIFTS AWAY)
-      // While camera rotates 90-120° into next angle
+      // PHASE D: 0.70 -> 0.78 (Short sharp settle into focus)
+      tl.to(
+        poseProxy,
+        {
+          camX: choreo.lensClosePose.camX,
+          camY: choreo.lensClosePose.camY,
+          camZ: choreo.lensClosePose.camZ,
+          modelX: choreo.lensClosePose.modelX,
+          modelY: choreo.lensClosePose.modelY,
+          modelZ: choreo.lensClosePose.modelZ,
+          modelRotX: choreo.lensClosePose.modelRotX,
+          modelRotY: choreo.lensClosePose.modelRotY,
+          modelRotZ: choreo.lensClosePose.modelRotZ,
+          modelScaleMultiplier: choreo.lensClosePose.scale,
+          duration: 0.08,
+          ease: "sine.out",
+        },
+        0.7
+      );
+
+      // SHUTTER CAPTURE MOMENT: 0.78 -> 0.82
+      // Optical Bloom Flash behind photograph
+      tl.fromTo(
+        flashRef.current,
+        { opacity: 0, scale: 0.8 },
+        { opacity: 0.95, scale: 1.5, duration: 0.03, ease: "power2.out" },
+        0.78
+      ).to(
+        flashRef.current,
+        { opacity: 0, scale: 1.8, duration: 0.04, ease: "power2.in" },
+        0.81
+      );
+
+      // Subtle mechanical shutter recoil on camera body
+      tl.to(
+        poseProxy,
+        {
+          camZ: choreo.captureKickPose.camZ,
+          modelZ: choreo.captureKickPose.modelZ,
+          modelScaleMultiplier: choreo.captureKickPose.scale,
+          duration: 0.03,
+          ease: "power2.out",
+        },
+        0.79
+      );
+
+      // PHASE E: 0.82 -> 0.92 (PHOTO REVEAL + CAMERA PULLS AWAY TO COMPANION POSE)
+      // Photograph emerges crystal-clear out of the lens focus field
       tl.to(
         cardRef.current,
-        { opacity: 0, y: 70, scale: 0.96, duration: 0.3, ease: "power2.in" },
-        0.7
+        {
+          opacity: 1,
+          scale: 1.0,
+          y: 0,
+          duration: 0.1,
+          ease: "power3.out",
+        },
+        0.82
+      );
+
+      // Narrative text & EXIF metadata slide in
+      tl.to(
+        [textRef.current, exifRef.current],
+        {
+          opacity: 1,
+          y: 0,
+          stagger: 0.025,
+          duration: 0.09,
+          ease: "power2.out",
+        },
+        0.83
+      );
+
+      // Camera pulls back smoothly to side 3/4 companion pose
+      tl.to(
+        poseProxy,
+        {
+          camX: choreo.companionPose.camX,
+          camY: choreo.companionPose.camY,
+          camZ: choreo.companionPose.camZ,
+          targetX: choreo.companionPose.targetX,
+          targetY: choreo.companionPose.targetY,
+          targetZ: choreo.companionPose.targetZ,
+          modelX: choreo.companionPose.modelX,
+          modelY: choreo.companionPose.modelY,
+          modelZ: choreo.companionPose.modelZ,
+          modelRotX: choreo.companionPose.modelRotX,
+          modelRotY: choreo.companionPose.modelRotY,
+          modelRotZ: choreo.companionPose.modelRotZ,
+          modelScaleMultiplier: choreo.companionPose.scale,
+          duration: 0.1,
+          ease: "power3.out",
+        },
+        0.82
+      );
+
+      // PHASE F: 0.92 -> 1.00 (Photo dissolves & Camera glides toward next memory)
+      tl.to(
+        cardRef.current,
+        {
+          opacity: 0,
+          y: 35,
+          scale: 0.95,
+          duration: 0.08,
+          ease: "power2.in",
+        },
+        0.92
       );
 
       tl.to(
         [textRef.current, exifRef.current],
-        { opacity: 0, y: 35, duration: 0.25, ease: "power2.in" },
-        0.72
+        {
+          opacity: 0,
+          y: 20,
+          duration: 0.06,
+          ease: "power2.in",
+        },
+        0.93
       );
 
+      tl.to(
+        poseProxy,
+        {
+          camX: choreo.exitPose.camX,
+          camY: choreo.exitPose.camY,
+          camZ: choreo.exitPose.camZ,
+          modelX: choreo.exitPose.modelX,
+          modelY: choreo.exitPose.modelY,
+          modelZ: choreo.exitPose.modelZ,
+          modelRotX: choreo.exitPose.modelRotX,
+          modelRotY: choreo.exitPose.modelRotY,
+          modelRotZ: choreo.exitPose.modelRotZ,
+          modelScaleMultiplier: choreo.exitPose.scale,
+          duration: 0.08,
+          ease: "sine.inOut",
+        },
+        0.92
+      );
     }, stageRef);
 
     return () => ctx.revert();
-  }, [index, cameraRotationDeg, align]);
+  }, [photo.chapter, index, align]);
 
   const isLeft = align === "left";
   const isRight = align === "right";
   const isCenter = align === "center";
 
-  // Compact luxury aspect sizing tailored for desktop, iPad, and mobile
+  // Aspect ratio styling
   const aspectClass =
     photo.aspect === "9:16"
       ? "aspect-[9/16] w-full max-w-[270px] sm:max-w-[300px] md:max-w-[315px] lg:max-w-[345px]"
@@ -94,16 +322,16 @@ export default function CinematicMoment({
   return (
     <section
       ref={stageRef}
-      className={`relative min-h-[110vh] md:min-h-[120vh] flex items-center justify-center px-4 sm:px-6 md:px-10 py-12 overflow-hidden ${className}`}
+      className={`relative w-full h-screen flex items-center justify-center px-4 sm:px-6 md:px-10 overflow-hidden select-none ${className}`}
     >
-      {/* Optical Shutter Flash Bloom (strictly behind the photo) */}
+      {/* Optical Shutter Flash Bloom (strictly behind the photograph) */}
       <div
         ref={flashRef}
-        className="absolute pointer-events-none w-72 h-72 rounded-full bg-radial from-[#ffffff] via-[#c8a97e]/25 to-transparent blur-3xl opacity-0 z-10"
+        className="absolute pointer-events-none w-96 h-96 rounded-full bg-radial from-[#ffffff] via-[#c8a97e]/40 to-transparent blur-3xl opacity-0 z-10"
         aria-hidden="true"
       />
 
-      {/* Responsive Content Container: Balanced split on iPad & Desktop */}
+      {/* Responsive Content Layout */}
       <div
         className={`relative z-20 w-full max-w-6xl flex flex-col ${
           isCenter
