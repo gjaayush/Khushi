@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { cameraState, getMomentChoreography } from "../../animations/cameraTimeline";
 import { playShutterClick } from "../../utils/audioShutter";
+import { useLightbox } from "../../context/LightboxContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,6 +21,7 @@ export default function CinematicMoment({
   const textRef = useRef(null);
   const exifRef = useRef(null);
   const hasClicked = useRef(false);
+  const { openLightbox } = useLightbox();
 
   useEffect(() => {
     if (!stageRef.current) return;
@@ -72,29 +74,29 @@ export default function CinematicMoment({
 
       // Long, cinematic scrubbed pinned sequence:
       // T = 0.00 - 0.20: [STAGE 1] Slow spatial travel through 3D space
-      // T = 0.20 - 0.40: [STAGE 2] Lens gradually tilts downward ("Something is about to appear below")
-      // T = 0.40 - 0.58: [STAGE 3 & 4] Photo approaches; camera glides to the side (REMAINS LARGE)
-      // T = 0.58 - 0.74: [STAGE 5] Camera turns front lens to aim directly at the photograph
-      // T = 0.74 - 0.80: [STAGE 6] Settle pause (holds steady, observing memory)
-      // T = 0.80 - 0.83: [STAGE 7] Subtle capture moment (soft optical bloom + shutter click)
-      // T = 0.83 - 0.93: [STAGE 8] Photo revealed at 100% clarity; CAMERA REMAINS LARGE BESIDE PHOTO
-      // T = 0.93 - 1.00: [STAGE 9 & 10] Photo drifts; camera continues journey to next memory (NO RESET)
+      // T = 0.20 - 0.42: [STAGE 2] Lens gradually tilts downward ("Something is about to appear below")
+      // T = 0.42 - 0.60: [STAGE 3 & 4] Photo approaches; camera glides to the side (REMAINS LARGE)
+      // T = 0.60 - 0.76: [STAGE 5] Camera turns front lens to aim directly at the photograph
+      // T = 0.76 - 0.82: [STAGE 6] Settle pause (holds steady, observing memory)
+      // T = 0.82 - 0.85: [STAGE 7] Subtle capture moment (soft optical bloom + shutter click)
+      // T = 0.85 - 0.94: [STAGE 8] Photo revealed at 100% clarity; CAMERA REMAINS LARGE BESIDE PHOTO
+      // T = 0.94 - 1.00: [STAGE 9 & 10] Photo drifts; camera continues journey to next memory (NO RESET)
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: stageRef.current,
           start: "top top",
-          end: "+=220%",
+          end: "+=260%",
           pin: true,
           scrub: 1.2,
           anticipatePin: 1,
           onUpdate: (self) => {
             // Precise shutter trigger with hysteresis
-            if (self.progress >= 0.79 && self.progress <= 0.84) {
+            if (self.progress >= 0.81 && self.progress <= 0.86) {
               if (!hasClicked.current) {
-                playShutterClick(0.28);
+                playShutterClick(0.25);
                 hasClicked.current = true;
               }
-            } else if (self.progress < 0.74 || self.progress > 0.89) {
+            } else if (self.progress < 0.75 || self.progress > 0.9) {
               hasClicked.current = false;
             }
           },
@@ -127,7 +129,7 @@ export default function CinematicMoment({
         0.0
       );
 
-      // STAGE 2: 0.20 -> 0.40 (Lens Gradually Points Downward)
+      // STAGE 2: 0.20 -> 0.42 (Lens Gradually Points Downward)
       tl.to(
         poseProxy,
         {
@@ -142,24 +144,24 @@ export default function CinematicMoment({
           modelRotY: choreo.downwardPose.modelRotY,
           modelRotZ: choreo.downwardPose.modelRotZ,
           modelScaleMultiplier: choreo.downwardPose.scale,
-          duration: 0.2,
+          duration: 0.22,
           ease: "power2.inOut",
         },
         0.2
       );
 
-      // STAGE 3 & 4: 0.40 -> 0.58 (Photo Approaches & Camera Moves to the Side)
+      // STAGE 3 & 4: 0.42 -> 0.60 (Photo Approaches & Camera Moves to the Side)
       // Photo card begins entering from below
       tl.to(
         cardRef.current,
         {
-          opacity: 0.35,
+          opacity: 0.4,
           y: 20,
           scale: 0.94,
           duration: 0.18,
           ease: "sine.out",
         },
-        0.4
+        0.42
       );
 
       // Camera glides to the side (REMAINS LARGE)
@@ -181,10 +183,10 @@ export default function CinematicMoment({
           duration: 0.18,
           ease: "power2.inOut",
         },
-        0.4
+        0.42
       );
 
-      // STAGE 5: 0.58 -> 0.74 (Lens Aims Directly at the Photograph)
+      // STAGE 5: 0.60 -> 0.76 (Lens Aims Directly at the Photograph)
       tl.to(
         poseProxy,
         {
@@ -203,10 +205,10 @@ export default function CinematicMoment({
           duration: 0.16,
           ease: "power2.out",
         },
-        0.58
+        0.6
       );
 
-      // STAGE 6: 0.74 -> 0.80 (Settle Pause - Camera Holds Steady Observing Memory)
+      // STAGE 6: 0.76 -> 0.82 (Settle Pause - Camera Holds Steady Observing Memory)
       tl.to(
         poseProxy,
         {
@@ -214,20 +216,20 @@ export default function CinematicMoment({
           duration: 0.06,
           ease: "none",
         },
-        0.74
+        0.76
       );
 
-      // STAGE 7: 0.80 -> 0.83 (Subtle Shutter Capture Moment)
-      // Subtle optical bloom flash (not a huge whiteout)
+      // STAGE 7: 0.82 -> 0.85 (Subtle Shutter Capture Moment)
+      // Soft optical bloom flash (pure atmospheric glow, not a blinding whiteout)
       tl.fromTo(
         flashRef.current,
         { opacity: 0, scale: 0.9 },
-        { opacity: 0.75, scale: 1.35, duration: 0.02, ease: "power2.out" },
-        0.8
+        { opacity: 0.7, scale: 1.35, duration: 0.02, ease: "power2.out" },
+        0.82
       ).to(
         flashRef.current,
-        { opacity: 0, scale: 1.6, duration: 0.03, ease: "power2.in" },
-        0.82
+        { opacity: 0, scale: 1.55, duration: 0.03, ease: "power2.in" },
+        0.84
       );
 
       // Subtle mechanical shutter recoil impulse
@@ -239,7 +241,7 @@ export default function CinematicMoment({
           duration: 0.02,
           ease: "power2.out",
         },
-        0.8
+        0.82
       );
 
       // Photograph emerges crystal-clear out of the capture point
@@ -252,7 +254,7 @@ export default function CinematicMoment({
           duration: 0.06,
           ease: "power2.out",
         },
-        0.81
+        0.83
       );
 
       // Narrative text & EXIF metadata slide in
@@ -265,10 +267,10 @@ export default function CinematicMoment({
           duration: 0.06,
           ease: "power2.out",
         },
-        0.82
+        0.84
       );
 
-      // STAGE 8: 0.83 -> 0.93 (PHOTO IS DISPLAYED & CAMERA REMAINS LARGE BESIDE IT)
+      // STAGE 8: 0.85 -> 0.94 (PHOTO IS DISPLAYED & CAMERA REMAINS LARGE BESIDE IT)
       // The camera stays beside the photo in full 3D detail while the visitor reads
       tl.to(
         poseProxy,
@@ -284,23 +286,23 @@ export default function CinematicMoment({
           modelRotX: choreo.holdPose.modelRotX,
           modelRotY: choreo.holdPose.modelRotY,
           modelScaleMultiplier: choreo.holdPose.scale,
-          duration: 0.1,
+          duration: 0.09,
           ease: "none",
         },
-        0.83
+        0.85
       );
 
-      // STAGE 9 & 10: 0.93 -> 1.00 (Photo Dissolves & Camera Continues Journey to Next Memory)
+      // STAGE 9 & 10: 0.94 -> 1.00 (Photo Dissolves & Camera Continues Journey to Next Memory)
       tl.to(
         cardRef.current,
         {
           opacity: 0,
           y: 28,
           scale: 0.96,
-          duration: 0.07,
+          duration: 0.06,
           ease: "power2.in",
         },
-        0.93
+        0.94
       );
 
       tl.to(
@@ -311,7 +313,7 @@ export default function CinematicMoment({
           duration: 0.05,
           ease: "power2.in",
         },
-        0.94
+        0.95
       );
 
       // Camera smoothly departs from its current side pose toward next memory (NO RESET)
@@ -327,10 +329,10 @@ export default function CinematicMoment({
           modelRotX: choreo.exitPose.modelRotX,
           modelRotY: choreo.exitPose.modelRotY,
           modelScaleMultiplier: choreo.exitPose.scale,
-          duration: 0.07,
+          duration: 0.06,
           ease: "sine.inOut",
         },
-        0.93
+        0.94
       );
     }, stageRef);
 
@@ -369,12 +371,14 @@ export default function CinematicMoment({
             : "md:flex-row-reverse items-center md:items-center justify-start gap-6 md:gap-8 lg:gap-12 md:pr-6 lg:pr-10"
         }`}
       >
-        {/* The Photograph: 100% crystal-clear, zero overlays, luxury framing */}
+        {/* The Photograph: 100% crystal-clear, zero overlays, luxury framing, CLICKABLE FOR LIGHTBOX */}
         <div
           ref={cardRef}
-          className={`relative ${aspectClass} overflow-hidden rounded-xl bg-[#0a0a0f] photo-frame-glow photo-card-interactive border border-white/15 will-change-transform shadow-2xl group`}
+          onClick={() => openLightbox(photo)}
+          className={`relative ${aspectClass} cursor-pointer overflow-hidden rounded-xl bg-[#0a0a0f] photo-frame-glow photo-card-interactive border border-white/15 will-change-transform shadow-2xl group transition-all duration-300 hover:border-[#c8a97e]/60`}
+          title="Click to view full image"
         >
-          {/* Viewfinder corner brackets */}
+          {/* Subtle Viewfinder corner brackets */}
           <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-[#c8a97e]/80 z-20 pointer-events-none group-hover:border-[#dfc28d] transition-colors" />
           <div className="absolute top-3 right-3 w-3 h-3 border-t-2 border-r-2 border-[#c8a97e]/80 z-20 pointer-events-none group-hover:border-[#dfc28d] transition-colors" />
           <div className="absolute bottom-3 left-3 w-3 h-3 border-b-2 border-l-2 border-[#c8a97e]/80 z-20 pointer-events-none group-hover:border-[#dfc28d] transition-colors" />
@@ -385,16 +389,9 @@ export default function CinematicMoment({
             src={photo.src}
             alt={photo.title}
             loading={index < 2 ? "eager" : "lazy"}
-            className="w-full h-full object-cover object-center block group-hover:scale-[1.02] transition-transform duration-700 ease-out"
+            className="w-full h-full object-cover object-center block group-hover:scale-[1.03] transition-transform duration-700 ease-out"
             style={{ opacity: 1, filter: "none" }}
           />
-
-          {/* Shutter capture stamp */}
-          <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 text-[8.5px] tracking-[0.2em] text-white/90 font-mono uppercase bg-[#070709]/85 backdrop-blur-md px-2 py-0.5 rounded border border-white/10">
-            <span>35MM RAW</span>
-            <span className="w-1 h-1 rounded-full bg-[#c8a97e]" />
-            <span>ARCHIVE</span>
-          </div>
         </div>
 
         {/* Editorial Narrative & EXIF Glassmorphic Card */}

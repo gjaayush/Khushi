@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useLightbox } from "../../context/LightboxContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +16,7 @@ export default function PhotoSequence({
   const textPlaceRef = useRef(null);
   const textPersonRef = useRef(null);
   const progressLineRef = useRef(null);
+  const { openLightbox } = useLightbox();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -81,8 +83,12 @@ export default function PhotoSequence({
     >
       {/* Main Container */}
       <div className="relative z-10 w-full max-w-5xl px-4 sm:px-6 md:px-10 flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10 lg:gap-14">
-        {/* Pinned Image Frame - 100% crystal clear */}
-        <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[340px] lg:max-w-[370px] aspect-[3/4] overflow-hidden rounded-xl bg-[#0a0a0e] photo-frame-glow photo-card-interactive border border-white/15 shadow-2xl">
+        {/* Pinned Image Frame - 100% crystal clear, CLICKABLE */}
+        <div
+          onClick={() => openLightbox(personPhoto || placePhoto)}
+          className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[340px] lg:max-w-[370px] aspect-[3/4] cursor-pointer overflow-hidden rounded-xl bg-[#0a0a0e] photo-frame-glow photo-card-interactive border border-white/15 shadow-2xl group transition-all duration-300 hover:border-[#c8a97e]/60"
+          title="Click to view full image"
+        >
           {/* PLACE IMAGE */}
           <div className="absolute inset-0">
             <img
@@ -110,17 +116,10 @@ export default function PhotoSequence({
           </div>
 
           {/* Viewfinder corner brackets */}
-          <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-[#c8a97e]/80 z-20 pointer-events-none" />
-          <div className="absolute top-3 right-3 w-3 h-3 border-t-2 border-r-2 border-[#c8a97e]/80 z-20 pointer-events-none" />
-          <div className="absolute bottom-3 left-3 w-3 h-3 border-b-2 border-l-2 border-[#c8a97e]/80 z-20 pointer-events-none" />
-          <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-[#c8a97e]/80 z-20 pointer-events-none" />
-
-          {/* Phase Badge */}
-          <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2 px-2.5 py-1 bg-[#070709]/85 backdrop-blur-md rounded border border-white/15 text-[9px] tracking-[0.22em] text-[#c8a97e] uppercase font-mono">
-            <span>SEQUENCE</span>
-            <span className="w-1 h-1 rounded-full bg-[#c8a97e]" />
-            <span>01 & 02</span>
-          </div>
+          <div className="absolute top-3 left-3 w-3 h-3 border-t-2 border-l-2 border-[#c8a97e]/80 z-20 pointer-events-none group-hover:border-[#dfc28d] transition-colors" />
+          <div className="absolute top-3 right-3 w-3 h-3 border-t-2 border-r-2 border-[#c8a97e]/80 z-20 pointer-events-none group-hover:border-[#dfc28d] transition-colors" />
+          <div className="absolute bottom-3 left-3 w-3 h-3 border-b-2 border-l-2 border-[#c8a97e]/80 z-20 pointer-events-none group-hover:border-[#dfc28d] transition-colors" />
+          <div className="absolute bottom-3 right-3 w-3 h-3 border-b-2 border-r-2 border-[#c8a97e]/80 z-20 pointer-events-none group-hover:border-[#dfc28d] transition-colors" />
         </div>
 
         {/* Narrative Progression Glassmorphic Card */}

@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useLightbox } from "../../context/LightboxContext";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,6 +14,7 @@ export default function PhotoHero({
   const containerRef = useRef(null);
   const imgRef = useRef(null);
   const titleRef = useRef(null);
+  const { openLightbox } = useLightbox();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -64,25 +66,21 @@ export default function PhotoHero({
       ref={containerRef}
       className={`relative w-full min-h-[90vh] md:min-h-[100vh] flex flex-col items-center justify-center my-10 md:my-16 px-4 sm:px-8 ${className}`}
     >
-      {/* Background Frame - ZERO overlays covering image */}
-      <div className="relative w-full max-w-4xl h-[50vh] sm:h-[58vh] md:h-[62vh] max-h-[620px] overflow-hidden rounded-2xl photo-frame-glow photo-card-interactive border border-white/15 bg-[#09090c] shadow-2xl">
+      {/* Background Frame - ZERO overlays covering image, CLICKABLE */}
+      <div
+        onClick={() => openLightbox(photo)}
+        className="relative w-full max-w-4xl h-[50vh] sm:h-[58vh] md:h-[62vh] max-h-[620px] cursor-pointer overflow-hidden rounded-2xl photo-frame-glow photo-card-interactive border border-white/15 bg-[#09090c] shadow-2xl group transition-all duration-300 hover:border-[#c8a97e]/60"
+        title="Click to view full image"
+      >
         {/* The crystal-clear photograph */}
         <img
           ref={imgRef}
           src={photo.src}
           alt={photo.title}
           loading="lazy"
-          className="w-full h-full object-cover object-center block"
+          className="w-full h-full object-cover object-center block group-hover:scale-[1.02] transition-transform duration-700 ease-out"
           style={{ opacity: 1, filter: "none" }}
         />
-
-        {/* Minimal corner coordinate markings */}
-        <div className="absolute top-4 left-4 sm:top-5 sm:left-5 text-[9px] tracking-[0.25em] text-white/85 font-mono bg-[#070709]/85 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
-          N 42°39′ // E 44°38′
-        </div>
-        <div className="absolute top-4 right-4 sm:top-5 sm:right-5 text-[9px] tracking-[0.25em] text-white/85 font-mono bg-[#070709]/85 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
-          ELEV 2379M
-        </div>
       </div>
 
       {/* Statement below/overlaying bottom with luxury glass-panel */}

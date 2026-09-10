@@ -22,6 +22,8 @@ import PageLoader from "./components/ui/PageLoader";
 import ScrollIndicator from "./components/ui/ScrollIndicator";
 import FilmOverlay from "./components/ui/FilmOverlay";
 import AudioAtmosphere from "./components/ui/AudioAtmosphere";
+import LightboxModal from "./components/ui/LightboxModal";
+import { LightboxProvider } from "./context/LightboxContext";
 
 function App() {
   const { scrollTo } = useLenis();
@@ -45,59 +47,64 @@ function App() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#070709] text-[#e8e6e3] overflow-x-hidden selection:bg-[#c8a97e]/30 selection:text-[#f3efe6]">
-      {/* 1. Cinematic Preloader */}
-      <PageLoader />
+    <LightboxProvider>
+      <div className="relative min-h-screen bg-[#070709] text-[#e8e6e3] overflow-x-hidden selection:bg-[#c8a97e]/30 selection:text-[#f3efe6]">
+        {/* 1. Cinematic Preloader */}
+        <PageLoader />
 
-      {/* 2. Audio Atmosphere */}
-      <AudioAtmosphere isMuted={isMuted} />
+        {/* 2. Audio Atmosphere */}
+        <AudioAtmosphere isMuted={isMuted} />
 
-      {/* 3. Film Overlays (Grain, Vignette, Letterbox) */}
-      <FilmOverlay />
+        {/* 3. Film Overlays (Grain, Vignette, Letterbox) */}
+        <FilmOverlay />
 
-      {/* 4. Minimalist Header */}
-      <Navbar
-        onNavigate={handleNavigate}
-        isMuted={isMuted}
-        onToggleAudio={handleToggleAudio}
-      />
+        {/* 4. Minimalist Header */}
+        <Navbar
+          onNavigate={handleNavigate}
+          isMuted={isMuted}
+          onToggleAudio={handleToggleAudio}
+        />
 
-      {/* 5. Fixed 3D DSLR Narrator Canvas */}
-      <CameraScene />
+        {/* 5. Fixed 3D DSLR Narrator Canvas */}
+        <CameraScene />
 
-      {/* 6. Narrative Chapters Flow */}
-      <main className="relative z-20 flex flex-col">
-        {/* Chapter 01: Through A Lens */}
-        <IntroSection />
+        {/* 6. Narrative Chapters Flow */}
+        <main className="relative z-20 flex flex-col">
+          {/* Chapter 01: Through A Lens */}
+          <IntroSection />
 
-        {/* Chapter 02: Her */}
-        <PortraitSection />
+          {/* Chapter 02: Her */}
+          <PortraitSection />
 
-        {/* Chapter 03: Moments */}
-        <MomentsSection />
+          {/* Chapter 03: Moments */}
+          <MomentsSection />
 
-        {/* Chapter 04: The Journey */}
-        <JourneySection />
+          {/* Chapter 04: The Journey */}
+          <JourneySection />
 
-        {/* Chapter 05: Into The Forest */}
-        <ForestSection />
+          {/* Chapter 05: Into The Forest */}
+          <ForestSection />
 
-        {/* Chapter 06: The Mountains */}
-        <MountainsSection />
+          {/* Chapter 06: The Mountains */}
+          <MountainsSection />
 
-        {/* Chapter 07: Looking Back */}
-        <LookingBackSection />
+          {/* Chapter 07: Looking Back */}
+          <LookingBackSection />
 
-        {/* Special Chapter: Motion In Time (Video Archive) */}
-        <VideoSection />
+          {/* Special Chapter: Motion In Time (Video Archive) */}
+          <VideoSection />
 
-        {/* Final Chapter: Some Moments Stay */}
-        <FinalSection />
-      </main>
+          {/* Final Chapter: Some Moments Stay */}
+          <FinalSection />
+        </main>
 
-      {/* 7. Scroll Indicator Ruler */}
-      <ScrollIndicator />
-    </div>
+        {/* 7. Scroll Indicator Ruler */}
+        <ScrollIndicator />
+
+        {/* 8. Fullscreen Lightbox Modal */}
+        <LightboxModal />
+      </div>
+    </LightboxProvider>
   );
 }
 
