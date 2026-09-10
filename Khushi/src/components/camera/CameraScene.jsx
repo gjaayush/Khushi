@@ -7,10 +7,12 @@ import CameraEnvironment from "./CameraEnvironment";
 import { cameraState } from "../../animations/cameraTimeline";
 
 function CameraController() {
-  useFrame((state, delta) => {
-    const damping = Math.min(delta * 4.0, 0.28);
+  const currentTarget = useRef(new THREE.Vector3(0, 0, 0));
 
-    // Smoothly lerp camera position in 3D space
+  useFrame((state, delta) => {
+    const damping = Math.min(delta * 4.5, 0.28);
+
+    // Smoothly lerp Three.js camera position in 3D world space
     state.camera.position.x = THREE.MathUtils.lerp(
       state.camera.position.x,
       cameraState.camX,
@@ -27,12 +29,25 @@ function CameraController() {
       damping
     );
 
-    // Look at target point
-    state.camera.lookAt(
+    // Smoothly lerp camera look-at target in 3D world space
+    currentTarget.current.x = THREE.MathUtils.lerp(
+      currentTarget.current.x,
       cameraState.targetX,
-      cameraState.targetY,
-      cameraState.targetZ
+      damping
     );
+    currentTarget.current.y = THREE.MathUtils.lerp(
+      currentTarget.current.y,
+      cameraState.targetY,
+      damping
+    );
+    currentTarget.current.z = THREE.MathUtils.lerp(
+      currentTarget.current.z,
+      cameraState.targetZ,
+      damping
+    );
+
+    // Point camera smoothly at the dynamic target
+    state.camera.lookAt(currentTarget.current);
   });
 
   return null;
@@ -75,7 +90,7 @@ export default function CameraScene() {
           toneMappingExposure: 1.1,
         }}
         camera={{
-          position: [0, 0, 1.15],
+          position: [0, 0, 3.0],
           fov: fov,
           near: 0.1,
           far: 30,

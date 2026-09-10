@@ -71,7 +71,7 @@ export default function PageLoader({ onLoaded }) {
         </div>
 
         <span className="text-[9px] tracking-[0.3em] text-[#71717a] font-mono uppercase">
-          CALIBRATING PENTAX K-1 SENSOR
+          INITIALIZING OPTICAL SENSOR
         </span>
       </div>
     </div>

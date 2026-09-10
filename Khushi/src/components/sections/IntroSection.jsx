@@ -55,7 +55,7 @@ export default function IntroSection() {
         <div className="flex justify-between items-start">
           <div className="w-4 h-4 border-t border-l border-[#c8a97e]/60" />
           <div className="text-[9px] font-mono tracking-[0.25em] text-[#c8a97e]/70 uppercase hidden sm:block">
-            PENTAX K-1 // 35MM FULL FRAME
+            DSLR ARCHIVE // 35MM FULL FRAME
           </div>
           <div className="w-4 h-4 border-t border-r border-[#c8a97e]/60" />
         </div>

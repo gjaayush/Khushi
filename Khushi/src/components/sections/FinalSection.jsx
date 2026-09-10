@@ -74,7 +74,7 @@ export default function FinalSection() {
           <div className="w-10 h-px bg-white/20 mb-6" />
 
           <p className="text-[10px] tracking-[0.3em] text-[#8e8e98] font-mono uppercase">
-            PENTAX K-1 // MEMORY ARCHIVE COMPLETED
+            35MM DSLR // MEMORY ARCHIVE COMPLETED
           </p>
         </div>
       </div>

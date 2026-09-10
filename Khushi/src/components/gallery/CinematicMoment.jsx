@@ -1,7 +1,6 @@
 import { useRef, useEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { updateCameraForMoment } from "../../animations/cameraTimeline";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,18 +22,13 @@ export default function CinematicMoment({
     if (!stageRef.current) return;
 
     const ctx = gsap.context(() => {
-      // Create ScrollTrigger timeline for this moment
+      // Create ScrollTrigger timeline for photograph reveal & hold
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: stageRef.current,
           start: "top 85%",
           end: "bottom 15%",
           scrub: 1.2,
-          onUpdate: (self) => {
-            const p = self.progress;
-            // Notify camera timeline about current progress and rotation target
-            updateCameraForMoment(index, p, cameraRotationDeg, align);
-          },
         },
       });
 
@@ -141,9 +135,9 @@ export default function CinematicMoment({
 
           {/* Shutter capture stamp */}
           <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1.5 text-[8.5px] tracking-[0.2em] text-white/90 font-mono uppercase bg-[#070709]/85 backdrop-blur-md px-2 py-0.5 rounded border border-white/10">
-            <span>PENTAX K-1</span>
+            <span>35MM RAW</span>
             <span className="w-1 h-1 rounded-full bg-[#c8a97e]" />
-            <span>RAW</span>
+            <span>ARCHIVE</span>
           </div>
         </div>
 

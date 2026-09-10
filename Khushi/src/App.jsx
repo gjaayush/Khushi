@@ -13,6 +13,7 @@ import JourneySection from "./components/sections/JourneySection";
 import ForestSection from "./components/sections/ForestSection";
 import MountainsSection from "./components/sections/MountainsSection";
 import LookingBackSection from "./components/sections/LookingBackSection";
+import VideoSection from "./components/gallery/VideoSection";
 import FinalSection from "./components/sections/FinalSection";
 
 // UI & Atmosphere
@@ -61,7 +62,7 @@ function App() {
         onToggleAudio={handleToggleAudio}
       />
 
-      {/* 5. Fixed 3D Pentax DSLR Narrator Canvas */}
+      {/* 5. Fixed 3D DSLR Narrator Canvas */}
       <CameraScene />
 
       {/* 6. Narrative Chapters Flow */}
@@ -86,6 +87,9 @@ function App() {
 
         {/* Chapter 07: Looking Back */}
         <LookingBackSection />
+
+        {/* Special Chapter: Motion In Time (Video Archive) */}
+        <VideoSection />
 
         {/* Final Chapter: Some Moments Stay */}
         <FinalSection />

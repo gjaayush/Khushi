@@ -68,6 +68,15 @@ export const CHAPTERS = [
     description: "Quiet window reflections, valley terraces, and gentle slanted light.",
   },
   {
+    id: "chapter-motion",
+    number: "REC",
+    roman: "LIVE",
+    title: "MOTION IN TIME",
+    subtitle: "Living fragments.",
+    quote: "Photographs hold the silence. Motion remembers the breath.",
+    description: "Moving recordings from the archives — candid smiles, passing winds, and living light.",
+  },
+  {
     id: "final-chapter",
     number: "08",
     roman: "VIII",
