@@ -10,19 +10,20 @@ The central narrator of the journey is a photorealistic **Full-Frame 35mm DSLR**
 
 ## ✨ Features
 
-### 📷 Interactive 3D DSLR Narrator
-- **Mouse Hover Tracking**: On the index/prologue page, moving the cursor rotates and tilts the 3D camera in real-time with silky spring damping.
-- **Click & Drag 360° Spin**: Click and drag anywhere across the hero section to freely spin the camera in full 360° with momentum and realistic friction decay.
-- **Ambient Levitation**: Organic floating oscillation (`sinusoidal breathing and roll`) keeps the 3D instrument alive even when idle.
-- **Continuous Scroll Choreography**: Seamlessly travels across the 3D viewport—panning laterally, rotating 90°–120° between photo releases, and completing full spatial cycles across narrative chapters.
+### 📷 Interactive 3D DSLR Narrator & Spatial Journey
+- **Dominant 3D Protagonist**: The 35mm DSLR is rendered large (~55–70% of viewport height) directly in front of the visitor, acting as the primary physical narrator across the entire archive.
+- **Mouse Hover Parallax**: On the index/prologue page, moving the cursor rotates and tilts the 3D camera in real-time with silky spring damping.
+- **Click & Drag 360° Inspection**: Click and drag anywhere across the hero section to freely spin the camera in full 360° with momentum and realistic friction decay (inspecting front, lens, sides, top, and rear controls).
+- **Dynamic Lens Aiming**: As memories approach, the camera glides beside each photograph and dynamically computes the 3D direction vector to aim its front lens directly at the photograph (`DSLR on Left ---> Photo on Right`, or vice-versa).
+- **Cinematic Settle & Shutter Capture**: Camera arrives at the scene first, settles into position, pauses, executes a subtle optical bloom & audio shutter capture impulse, and reveals the photograph in 100% crystal clarity.
+- **Continuous 3D Spatial Trajectory**: The camera never teleports or resets to center between photographs; it continuously journeys from one memory pose to the next with natural angle variations (40°, 90°, 120°, 180°).
 - **Realistic PBR Optics**: Multi-coated anti-reflective optical glass elements and knurled magnesium alloy finishes reacting dynamically to HDR environment lighting.
 
-### 🖼️ Responsive Editorial Gallery (Desktop, iPad, Mobile)
-- **Compact & Elegant Layouts**: Designed to look stunning and proportionate across high-resolution desktops, iPad / tablets, and mobile screens without oversized or awkward containers.
-- **Balanced Side-by-Side Compositions**: Dual-column split layouts on tablet and desktop pairing photographs with frosted `.glass-panel` narrative cards.
+### 🖼️ Responsive Editorial Gallery & Fullscreen Lightbox
+- **Fullscreen Cinematic Lightbox**: Clicking any photograph across the website opens a high-resolution viewer with dark backdrop blur, EXIF metadata strip, smooth keyboard (ESC, Left, Right) navigation, and click-outside dismissal.
 - **Pure Image Presentation**: Zero darkening overlays or color degradation over the original photographs—100% natural, crisp clarity.
-- **Authentic Viewfinder HUD**: Viewfinder corner brackets in warm gold, camera capture stamps (`35MM RAW // ARCHIVE`), and authentic EXIF data (focal length, aperture, shutter speed, ISO, date).
-- **Interactive Micro-Interactions**: Smooth hover elevation, soft photographic glow, and optical shutter blooms.
+- **Balanced Side-by-Side Compositions**: Dual-column split layouts pairing photographs with frosted `.glass-panel` narrative cards.
+- **Subtle Viewfinder HUD**: Minimalist corner brackets in warm gold and authentic EXIF data (focal length, aperture, shutter speed, ISO, date).
 
 ### 🎥 Living Motion Chapter (`VideoSection`)
 - **Dual Viewfinder Reels**: Showcases moving recordings (`Video1.mp4` & `Video2.mp4`) side-by-side on desktop and tablet.
