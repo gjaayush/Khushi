@@ -55,17 +55,17 @@ function CameraController() {
 
 export default function CameraScene() {
   const containerRef = useRef();
-  const [fov, setFov] = useState(32);
+  const [fov, setFov] = useState(28);
 
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth;
       if (w < 640) {
-        setFov(42); // Mobile: balanced wide-normal
+        setFov(40); // Mobile: balanced framing
       } else if (w < 1024) {
-        setFov(36); // iPad / Tablet
+        setFov(34); // iPad / Tablet
       } else {
-        setFov(32); // Desktop: cinematic telephoto compression
+        setFov(28); // Desktop: cinematic telephoto compression
       }
     };
 
@@ -90,7 +90,7 @@ export default function CameraScene() {
           toneMappingExposure: 1.15,
         }}
         camera={{
-          position: [0, 0, 2.5],
+          position: [0, 0, 2.3],
           fov: fov,
           near: 0.02,
           far: 40,

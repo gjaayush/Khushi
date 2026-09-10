@@ -10,9 +10,8 @@ export default function CameraModel() {
   const { scene } = useGLTF("/models/pentax_k-1_dslr.glb");
 
   // Dynamic responsive scale tailored for desktop, iPad, and mobile
-  // Calibrated so DSLR visually occupies 40-70% visual height on Desktop,
-  // 35-60% on Tablet, and 35-50% on Mobile
-  const [deviceScale, setDeviceScale] = useState(3.95);
+  // Large cinematic hero object occupying 60-70% visual height on desktop
+  const [deviceScale, setDeviceScale] = useState(4.4);
 
   // Mouse & Pointer interaction state
   const mousePos = useRef({ x: 0, y: 0 });
@@ -27,25 +26,25 @@ export default function CameraModel() {
     const handleResize = () => {
       const w = window.innerWidth;
       if (w < 640) {
-        // Mobile (occupies ~40-52% viewport height)
-        setDeviceScale(2.9);
+        // Mobile (occupies ~42-52% viewport height)
+        setDeviceScale(3.2);
       } else if (w < 1024) {
-        // Tablet / iPad (occupies ~45-60% viewport height)
-        setDeviceScale(3.5);
+        // Tablet / iPad (occupies ~50-60% viewport height)
+        setDeviceScale(3.8);
       } else if (w < 1440) {
-        // Laptops & standard desktop (occupies ~55-70% viewport height)
-        setDeviceScale(3.95);
+        // Laptops & standard desktop (occupies ~60-70% viewport height)
+        setDeviceScale(4.4);
       } else {
         // Large desktop / Ultrawide
-        setDeviceScale(4.25);
+        setDeviceScale(4.7);
       }
     };
 
     const handleScroll = () => {
       // Hero interactive influence smoothly fades as user scrolls past first viewport
-      const threshold = window.innerHeight * 0.9;
+      const threshold = window.innerHeight * 0.85;
       const progress = Math.min(1, Math.max(0, window.scrollY / threshold));
-      scrollInfluence.current = 1.0 - progress;
+      scrollInfluence.current = Math.max(0, 1.0 - progress * 1.25);
     };
 
     const handlePointerMove = (e) => {
@@ -55,22 +54,22 @@ export default function CameraModel() {
       mousePos.current.x = nx;
       mousePos.current.y = ny;
 
-      if (isDragging.current && scrollInfluence.current > 0.1) {
+      if (isDragging.current && scrollInfluence.current > 0.05) {
         const dx = e.clientX - dragStart.current.x;
         const dy = e.clientY - dragStart.current.y;
         dragDelta.current.x = dx;
         dragDelta.current.y = dy;
 
-        // Add to drag rotation: horizontal dragging spins Y axis 360°, vertical tilts X
-        const sensitivity = 0.007;
+        // Smooth drag rotation: horizontal dragging spins Y axis 360°, vertical tilts X
+        const sensitivity = 0.0075;
         dragRotation.current.y += dx * sensitivity;
         dragRotation.current.x = Math.max(
-          -0.6,
-          Math.min(0.6, dragRotation.current.x + dy * sensitivity * 0.5)
+          -0.75,
+          Math.min(0.75, dragRotation.current.x + dy * sensitivity * 0.6)
         );
 
         dragVelocity.current.x = dx * sensitivity;
-        dragVelocity.current.y = dy * sensitivity * 0.5;
+        dragVelocity.current.y = dy * sensitivity * 0.6;
 
         dragStart.current = { x: e.clientX, y: e.clientY };
       }
@@ -157,34 +156,33 @@ export default function CameraModel() {
   useFrame((state, delta) => {
     if (!outerGroupRef.current) return;
 
-    // Spring damping factor
-    const damping = Math.min(delta * 4.5, 0.28);
+    // Spring damping factor for physical inertia
+    const damping = Math.min(delta * 4.2, 0.26);
     const heroFactor = scrollInfluence.current;
 
-    // Apply friction to drag velocity when user releases pointer
-    if (!isDragging.current && Math.abs(dragVelocity.current.x) > 0.0001) {
+    // Apply physical friction to drag velocity when user releases pointer (smooth momentum)
+    if (!isDragging.current && Math.abs(dragVelocity.current.x) > 0.00005) {
       dragRotation.current.y += dragVelocity.current.x;
-      dragVelocity.current.x *= 0.94; // Smooth friction decay
+      dragVelocity.current.x *= 0.95; // Smooth inertia decay
     }
-    if (!isDragging.current && Math.abs(dragVelocity.current.y) > 0.0001) {
+    if (!isDragging.current && Math.abs(dragVelocity.current.y) > 0.00005) {
       dragRotation.current.x += dragVelocity.current.y;
-      dragVelocity.current.x = Math.max(-0.6, Math.min(0.6, dragRotation.current.x));
-      dragVelocity.current.y *= 0.92;
+      dragRotation.current.x = Math.max(-0.75, Math.min(0.75, dragRotation.current.x));
+      dragVelocity.current.y *= 0.94;
     }
 
     // Gentle ambient floating / breathing physics
     const time = state.clock.getElapsedTime();
-    const floatY = Math.sin(time * 0.9) * 0.035 * (heroFactor > 0.5 ? 1.0 : 0.3);
-    const floatRotZ = Math.cos(time * 0.7) * 0.015 * heroFactor;
+    const floatY = Math.sin(time * 0.8) * 0.03 * (heroFactor > 0.5 ? 1.0 : 0.2);
+    const floatRotZ = Math.cos(time * 0.6) * 0.012 * heroFactor;
 
-    // Responsive mouse hover rotation (smooth tracking of pointer coordinates on index page)
-    // Horizontal range: ±0.85 rad (~50°), Vertical range: ±0.35 rad (~20°)
-    const hoverRotY = mousePos.current.x * 0.85 * heroFactor;
-    const hoverRotX = -mousePos.current.y * 0.38 * heroFactor;
+    // Responsive lens tracking: lens subtly follows cursor orientation
+    const cursorAimY = mousePos.current.x * 0.5 * heroFactor;
+    const cursorAimX = -mousePos.current.y * 0.3 * heroFactor;
 
-    // Model Position: blends timeline position with subtle mouse parallax
-    const targetX = cameraState.modelX + (mousePos.current.x * 0.15 * heroFactor);
-    const targetY = cameraState.modelY + floatY - (mousePos.current.y * 0.12 * heroFactor);
+    // Model Position: blends timeline position with subtle mouse parallax on hero
+    const targetX = cameraState.modelX + (mousePos.current.x * 0.12 * heroFactor);
+    const targetY = cameraState.modelY + floatY - (mousePos.current.y * 0.08 * heroFactor);
     const targetZ = cameraState.modelZ;
 
     outerGroupRef.current.position.x = THREE.MathUtils.lerp(
@@ -203,18 +201,18 @@ export default function CameraModel() {
       damping
     );
 
-    // Dynamic 360° rotation:
-    // When on Hero: timeline rotation + interactive drag rotation + smooth mouse cursor hover
-    // When scrolling: timeline progression takes over smoothly
+    // Dynamic rotation:
+    // When on Hero: interactive drag examination (360° Y + pitch X) + lens cursor tracking
+    // When scrolling: GSAP continuous trajectory takes over naturally without fighting
     const targetRotY =
       cameraState.modelRotY +
       (dragRotation.current.y * heroFactor) +
-      hoverRotY;
+      cursorAimY;
 
     const targetRotX =
       cameraState.modelRotX +
       (dragRotation.current.x * heroFactor) +
-      hoverRotX;
+      cursorAimX;
 
     const targetRotZ = cameraState.modelRotZ + floatRotZ;
 

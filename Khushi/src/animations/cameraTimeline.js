@@ -4,99 +4,82 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 gsap.registerPlugin(ScrollTrigger);
 
 /**
- * CAMERA POSE ARCHITECTURE
- * Defines baseline cinematic waypoints across the continuous narrative archive.
+ * MASTER CAMERA ARCHITECTURE
+ * Continuous 3D spatial journey across the narrative archive.
  * Calibrated for physical 35mm DSLR:
  * - modelX, modelY, modelZ: spatial translation of DSLR body
  * - modelRotX: pitch (vertical tilt)
- * - modelRotY: yaw (continuous 360°+ rotation)
- * - modelRotZ: roll (dynamic bank)
+ * - modelRotY: yaw (continuous cumulative rotation)
+ * - modelRotZ: roll (dynamic banking)
  * - camX, camY, camZ: Three.js camera position
  * - targetX, targetY, targetZ: camera look-at focus point
- * - scale: relative scale multiplier
+ * - modelScaleMultiplier: relative scale factor
  */
 export const CAMERA_POSES = {
   // Chapter 01: Through A Lens (Prologue / Hero)
-  // Eye-level commanding front product view, lens facing viewer directly
+  // Large commanding front product view, lens facing viewer directly
   introHero: {
     camX: 0.0,
     camY: 0.0,
-    camZ: 2.5,
+    camZ: 2.3,
     targetX: 0.0,
     targetY: 0.0,
     targetZ: 0.0,
     modelX: 0.0,
     modelY: 0.0,
     modelZ: 0.0,
-    modelRotX: 0.03,
+    modelRotX: 0.02,
     modelRotY: 0.0,
     modelRotZ: 0.0,
-    scale: 1.05,
+    scale: 1.15,
   },
   introExit: {
-    camX: 0.65,
-    camY: 0.25,
-    camZ: 2.45,
-    targetX: 0.25,
+    camX: 0.45,
+    camY: 0.2,
+    camZ: 2.4,
+    targetX: 0.15,
     targetY: -0.05,
     targetZ: 0.0,
-    modelX: 0.75,
-    modelY: -0.05,
+    modelX: 0.55,
+    modelY: -0.08,
     modelZ: 0.05,
-    modelRotX: 0.12,
-    modelRotY: 0.65, // ~37° top dial angle
-    modelRotZ: -0.03,
-    scale: 1.02,
-  },
-
-  // Chapter 05: Forest Pinned Sequence Ambient Companion
-  forestSequence: {
-    camX: -0.5,
-    camY: 0.15,
-    camZ: 2.5,
-    targetX: -0.2,
-    targetY: 0.05,
-    targetZ: 0.0,
-    modelX: -0.65,
-    modelY: 0.08,
-    modelZ: -0.1,
-    modelRotX: 0.08,
-    modelRotY: 7.2,
-    modelRotZ: 0.02,
-    scale: 0.98,
+    modelRotX: 0.18, // Lens starts tilting downward toward upcoming Chapter 02
+    modelRotY: 0.55,
+    modelRotZ: -0.02,
+    scale: 1.12,
   },
 
   // Special Chapter: Motion In Time (Video Archive)
-  // Dynamic elevated perspective alongside dual video reels
+  // Elevated perspective over dual 1080p video viewfinders
   motionReels: {
     camX: 0.0,
-    camY: 0.45,
-    camZ: 2.65,
+    camY: 0.42,
+    camZ: 2.55,
     targetX: 0.0,
-    targetY: 0.15,
+    targetY: 0.12,
     targetZ: -0.1,
     modelX: 0.0,
-    modelY: 0.35,
-    modelZ: -0.2,
-    modelRotX: 0.24,
+    modelY: 0.32,
+    modelZ: -0.15,
+    modelRotX: 0.22,
     modelRotY: 8.65,
     modelRotZ: 0.0,
-    scale: 0.95,
+    scale: 1.05,
   },
   motionExit: {
-    camX: -0.6,
-    camY: -0.1,
-    camZ: 2.55,
-    targetX: -0.3,
+    camX: -0.5,
+    camY: -0.08,
+    camZ: 2.45,
+    targetX: -0.2,
     targetY: -0.05,
     targetZ: -0.05,
-    modelX: -0.55,
-    modelY: -0.08,
-    modelZ: -0.1,
-    modelRotX: 0.06,
+    modelX: -0.45,
+    modelY: -0.06,
+    modelZ: -0.08,
+    modelRotX: 0.1,
     modelRotY: 9.15,
     modelRotZ: -0.02,
-    scale: 1.0,
+    scale: 1.08,
   },
 
   // Final Chapter / Epilogue: Return
@@ -104,7 +87,7 @@ export const CAMERA_POSES = {
   epilogueReturn: {
     camX: 0.0,
     camY: 0.0,
-    camZ: 2.45,
+    camZ: 2.3,
     targetX: 0.0,
     targetY: 0.0,
     targetZ: 0.0,
@@ -114,7 +97,7 @@ export const CAMERA_POSES = {
     modelRotX: 0.02,
     modelRotY: Math.PI * 4, // 720° (2 full 360° revolutions, settling perfectly facing forward)
     modelRotZ: 0.0,
-    scale: 1.15,
+    scale: 1.2,
   },
 };
 
@@ -122,7 +105,7 @@ export const CAMERA_POSES = {
 export const cameraState = {
   camX: 0,
   camY: 0,
-  camZ: 2.5,
+  camZ: 2.3,
 
   targetX: 0,
   targetY: 0,
@@ -131,250 +114,283 @@ export const cameraState = {
   modelX: 0,
   modelY: 0,
   modelZ: 0,
-  modelRotX: 0.03,
+  modelRotX: 0.02,
   modelRotY: 0,
   modelRotZ: 0,
-  modelScaleMultiplier: 1.05,
+  modelScaleMultiplier: 1.15,
 
   lightingIntensity: 1.15,
   canvasOpacity: 1.0,
 };
 
 /**
- * Generates the full 8-phase cinematic capture choreography for an individual photo.
- * Ensures the camera:
- * 1. Travels across 3D space (not static/centered)
- * 2. Turns its front lens directly towards the viewer
- * 3. Approaches the viewer until the lens is HUGE (filling 65-85% of visual field)
- * 4. Settles for the shutter click moment
- * 5. Pulls back into a companion 3/4 pose alongside the revealed photograph
- * 6. Travels away toward the next memory
+ * Calculates continuous spatial choreography for any photograph:
+ * - Stage 1: Camera slowly travels through 3D space from previous memory pose.
+ * - Stage 2: Lens gradually tilts downward toward upcoming content below.
+ * - Stage 3: Photo approaches, camera glides to the side (REMAINS LARGE).
+ * - Stage 4: Lens calculates direction vector and aims directly at the photograph!
+ * - Stage 5: Camera settles into position. Settle pause.
+ * - Stage 6: Subtle capture moment (optical bloom + shutter click).
+ * - Stage 7: Photo is revealed. Camera REMAINS BESIDE PHOTO (occupying 40-50% height).
+ * - Stage 8: User continues scrolling: Camera continues from current pose toward next memory.
  */
-export function getMomentChoreography({ chapter, index = 0, align = "left", isMobile = false, isTablet = false }) {
-  // Determine front-facing capture rotation in radians for this moment
-  // Base rotation accumulates continuously to avoid snapping
+export function getMomentChoreography({
+  chapter,
+  index = 0,
+  align = "left",
+  isMobile = false,
+  isTablet = false,
+}) {
+  // Accumulate continuous baseline yaw rotation to avoid 360° spin snaps
   let baseYaw = 0;
-  let approachAngle = 0.55; // 3/4 side angle before turn
-  let chapterTilt = 0.05;
-
   if (chapter === "chapter-02") {
-    // HER: Intimate portraits, warm gentle turns around 0 -> 2*PI
-    baseYaw = 0.0 + (index * 0.45);
-    approachAngle = 0.65;
-    chapterTilt = 0.04;
+    // HER: Intimate portraits, gentle cumulative progression
+    baseYaw = 0.35 + index * 0.45;
   } else if (chapter === "chapter-03") {
-    // MOMENTS: Kinetic street sweeps, lateral tracking from 2.5 -> 6.0 rad
-    baseYaw = 2.4 + (index * 0.48);
-    approachAngle = index % 2 === 0 ? 0.85 : -0.85;
-    chapterTilt = 0.08;
+    // MOMENTS: Street sweeps, progressive tracking from 2.5 -> 6.0 rad
+    baseYaw = 2.4 + index * 0.45;
   } else if (chapter === "chapter-04") {
-    // THE JOURNEY: High overhead mountain highway angles from 6.28 -> 8.2 rad
-    baseYaw = Math.PI * 2 + (index * 0.5);
-    approachAngle = 0.75;
-    chapterTilt = 0.22; // marked downward tilt over top dials
+    // THE JOURNEY: High mountain passes from 6.28 -> 8.2 rad
+    baseYaw = Math.PI * 2 + index * 0.45;
   } else if (chapter === "chapter-05") {
-    // INTO THE FOREST: Deep organic glide, subtle bank
-    baseYaw = 7.6 + (index * 0.4);
-    approachAngle = 0.5;
-    chapterTilt = 0.06;
+    // INTO THE FOREST: Deep serene organic glide
+    baseYaw = 7.6 + index * 0.4;
   } else if (chapter === "chapter-06") {
-    // THE MOUNTAINS: Low-angle to high viewpoint sweep from 9.2 -> 10.6 rad
-    baseYaw = 9.2 + (index * 0.55);
-    approachAngle = index % 2 === 0 ? -0.9 : 0.9;
-    chapterTilt = -0.1; // dramatic low angle looking up
+    // THE MOUNTAINS: Sweeping landscape angles
+    baseYaw = 9.2 + index * 0.5;
   } else if (chapter === "chapter-07") {
-    // LOOKING BACK: Nostalgic sunset glide from 10.8 -> 12.0 rad
-    baseYaw = 10.8 + (index * 0.45);
-    approachAngle = 0.42;
-    chapterTilt = 0.03;
+    // LOOKING BACK: Nostalgic sunset reflections
+    baseYaw = 10.8 + index * 0.4;
   } else {
     baseYaw = index * 0.5;
   }
 
-  // The front lens faces the viewer at exact multiples of 2*PI relative to baseYaw
-  const captureRotY = Math.round(baseYaw / (Math.PI * 2)) * (Math.PI * 2);
-
-  // Responsive spatial modifiers
-  const latMult = isMobile ? 0.2 : isTablet ? 0.65 : 1.0;
-  const vertOffset = isMobile ? 0.26 : 0.0;
   const isPhotoLeft = align === "left";
+  const isPhotoRight = align === "right";
+  const isPhotoCenter = align === "center";
 
-  // When photo is on left, camera sits on right (+X); when photo is on right, camera sits on left (-X)
-  const companionSideX = (isPhotoLeft ? 0.92 : -0.92) * latMult;
-  const companionAngleY = captureRotY + (isPhotoLeft ? 0.42 : -0.42);
+  // Desktop side coordinates:
+  // If photo is on LEFT, camera moves to RIGHT (+X).
+  // If photo is on RIGHT, camera moves to LEFT (-X).
+  const latFactor = isMobile ? 0.0 : isTablet ? 0.65 : 1.0;
+  const companionX = isPhotoCenter
+    ? 0.0
+    : (isPhotoLeft ? 0.88 : -0.88) * latFactor;
 
-  // 1. ENTRY POSE (Camera sweeps into frame from travel)
-  const entryPose = {
-    camX: (isPhotoLeft ? -0.4 : 0.4) * latMult,
-    camY: chapterTilt * 0.5 + (isMobile ? 0.1 : 0),
+  // Vertical placement: On mobile, camera sits gracefully above the photo card
+  const companionY = isMobile ? 0.38 : isPhotoCenter ? 0.45 : 0.0;
+
+  // LENS AIMING MATHEMATICS:
+  // Front lens faces +Z when modelRotY = 0.
+  // To aim at photo on the LEFT (from +X toward -X):
+  // Lens must rotate counter-clockwise (positive Y rotation) by ~44° (+0.76 rad).
+  // To aim at photo on the RIGHT (from -X toward +X):
+  // Lens must rotate clockwise (negative Y rotation) by ~44° (-0.76 rad).
+  // If photo is below (on mobile or center):
+  // Camera pitch (modelRotX) tilts downward (+0.32 to +0.40 rad) directly at the photo!
+  const aimYawOffset = isMobile
+    ? 0.0
+    : isPhotoCenter
+    ? 0.0
+    : isPhotoLeft
+    ? 0.76 // Aim left at photo
+    : -0.76; // Aim right at photo
+
+  const aimPitch = isMobile ? 0.32 : isPhotoCenter ? 0.38 : 0.08;
+
+  // Base capture yaw angle (rounded to preserve front orientation orientation)
+  const captureBaseYaw = Math.round(baseYaw / (Math.PI * 2)) * (Math.PI * 2);
+  const targetAimedYaw = captureBaseYaw + aimYawOffset;
+
+  // 1. START / TRAVEL POSE: Camera enters slowly through 3D space
+  // Inherits previous position, begins moving
+  const prevSideX = isPhotoLeft ? -0.45 : 0.45;
+  const startPose = {
+    camX: prevSideX * latFactor * 0.5,
+    camY: isMobile ? 0.15 : 0.0,
     camZ: 2.45 + (isMobile ? 0.35 : 0),
     targetX: 0.0,
     targetY: 0.0,
     targetZ: 0.0,
-    modelX: (isPhotoLeft ? -0.75 : 0.75) * latMult,
-    modelY: (chapterTilt * 0.6) + vertOffset,
-    modelZ: -0.15,
-    modelRotX: chapterTilt,
-    modelRotY: captureRotY + approachAngle,
-    modelRotZ: isPhotoLeft ? -0.04 : 0.04,
-    scale: 1.05 * (isMobile ? 0.85 : 1.0),
+    modelX: prevSideX * latFactor,
+    modelY: companionY * 0.5,
+    modelZ: -0.1,
+    modelRotX: 0.04,
+    modelRotY: captureBaseYaw + (isPhotoLeft ? -0.35 : 0.35),
+    modelRotZ: isPhotoLeft ? 0.02 : -0.02,
+    scale: 1.12 * (isMobile ? 0.88 : 1.0),
   };
 
-  // 2. TRAVEL POSE (Camera sweeps across 3D space, beginning turn)
+  // 2. STAGE 1: SLOW SPATIAL TRAVEL (Camera moves through 3D space)
   const travelPose = {
     camX: 0.0,
-    camY: vertOffset * 0.3,
-    camZ: 2.3 + (isMobile ? 0.3 : 0),
+    camY: isMobile ? 0.15 : 0.0,
+    camZ: 2.38 + (isMobile ? 0.35 : 0),
     targetX: 0.0,
     targetY: 0.0,
     targetZ: 0.0,
-    modelX: (isPhotoLeft ? -0.3 : 0.3) * latMult,
-    modelY: vertOffset * 0.5,
+    modelX: (companionX * 0.4),
+    modelY: companionY * 0.7,
     modelZ: 0.0,
-    modelRotX: chapterTilt * 0.4,
-    modelRotY: captureRotY + (approachAngle * 0.4),
-    modelRotZ: 0.0,
-    scale: 1.18 * (isMobile ? 0.88 : 1.0),
-  };
-
-  // 3. FACING POSE (Front lens turns directly toward viewer)
-  const facingPose = {
-    camX: 0.0,
-    camY: vertOffset * 0.2,
-    camZ: 2.05 + (isMobile ? 0.25 : 0),
-    targetX: 0.0,
-    targetY: 0.0,
-    targetZ: 0.0,
-    modelX: 0.0,
-    modelY: vertOffset * 0.3,
-    modelZ: 0.08,
-    modelRotX: 0.02,
-    modelRotY: captureRotY, // ◉ FRONT LENS FACES USER DIRECTLY
-    modelRotZ: 0.0,
-    scale: 1.32 * (isMobile ? 0.92 : 1.0),
-  };
-
-  // 4. LENS APPROACH POSE (Lens physically advances and becomes HUGE)
-  // Visually occupies 70-85% of visual field on desktop, 55-65% on mobile
-  const lensApproachPose = {
-    camX: 0.0,
-    camY: vertOffset * 0.1,
-    camZ: isMobile ? 1.6 : isTablet ? 1.42 : 1.32,
-    targetX: 0.0,
-    targetY: 0.0,
-    targetZ: 0.0,
-    modelX: 0.0,
-    modelY: vertOffset * 0.2,
-    modelZ: 0.26,
-    modelRotX: 0.01,
-    modelRotY: captureRotY, // ◉ DEAD CENTER LENS
-    modelRotZ: 0.0,
-    scale: isMobile ? 1.25 : isTablet ? 1.48 : 1.68,
-  };
-
-  // 5. LENS CLOSE POSE (Short sharp settle right before shutter click)
-  const lensClosePose = {
-    camX: 0.0,
-    camY: vertOffset * 0.1,
-    camZ: isMobile ? 1.55 : isTablet ? 1.38 : 1.28,
-    targetX: 0.0,
-    targetY: 0.0,
-    targetZ: 0.0,
-    modelX: 0.0,
-    modelY: vertOffset * 0.18,
-    modelZ: 0.28,
-    modelRotX: 0.01,
-    modelRotY: captureRotY,
-    modelRotZ: 0.0,
-    scale: isMobile ? 1.28 : isTablet ? 1.52 : 1.72,
-  };
-
-  // 6. SHUTTER RECOIL POSE (Tiny mechanical pulse at shutter instant)
-  const captureKickPose = {
-    camX: 0.0,
-    camY: vertOffset * 0.1,
-    camZ: isMobile ? 1.58 : isTablet ? 1.4 : 1.3,
-    targetX: 0.0,
-    targetY: 0.0,
-    targetZ: 0.0,
-    modelX: 0.0,
-    modelY: vertOffset * 0.18,
-    modelZ: 0.24,
-    modelRotX: 0.02,
-    modelRotY: captureRotY,
-    modelRotZ: 0.0,
-    scale: isMobile ? 1.24 : isTablet ? 1.47 : 1.65,
-  };
-
-  // 7. COMPANION POSE (Camera pulls back into side 3/4 angle while photo reveals)
-  const companionPose = {
-    camX: (isPhotoLeft ? 0.35 : -0.35) * latMult,
-    camY: vertOffset * 0.2,
-    camZ: 2.35 + (isMobile ? 0.35 : 0),
-    targetX: (companionSideX * 0.4),
-    targetY: vertOffset * 0.2,
-    targetZ: 0.0,
-    modelX: companionSideX,
-    modelY: vertOffset,
-    modelZ: 0.0,
-    modelRotX: 0.05,
-    modelRotY: companionAngleY, // 3/4 companion pose
-    modelRotZ: isPhotoLeft ? 0.02 : -0.02,
-    scale: 1.08 * (isMobile ? 0.85 : 1.0),
-  };
-
-  // 8. EXIT POSE (Camera begins travelling toward next memory)
-  const exitPose = {
-    camX: (isPhotoLeft ? 0.5 : -0.5) * latMult,
-    camY: vertOffset * 0.2,
-    camZ: 2.45 + (isMobile ? 0.35 : 0),
-    targetX: 0.0,
-    targetY: 0.0,
-    targetZ: 0.0,
-    modelX: (isPhotoLeft ? 1.05 : -1.05) * latMult,
-    modelY: vertOffset,
-    modelZ: -0.15,
     modelRotX: 0.08,
-    modelRotY: captureRotY + (approachAngle * 1.3),
+    modelRotY: captureBaseYaw + (isPhotoLeft ? 0.15 : -0.15),
+    modelRotZ: 0.0,
+    scale: 1.15 * (isMobile ? 0.9 : 1.0),
+  };
+
+  // 3. STAGE 2: LENS GRADUALLY POINTS DOWNWARD ("Something is about to appear below")
+  const downwardPose = {
+    camX: (companionX * 0.3),
+    camY: isMobile ? 0.18 : 0.05,
+    camZ: 2.35 + (isMobile ? 0.35 : 0),
+    targetX: 0.0,
+    targetY: -0.1,
+    targetZ: 0.0,
+    modelX: (companionX * 0.7),
+    modelY: companionY * 0.9,
+    modelZ: 0.05,
+    modelRotX: 0.26, // ↘ LENS VISIBLY POINTS DOWNWARD
+    modelRotY: captureBaseYaw + (isPhotoLeft ? 0.35 : -0.35),
+    modelRotZ: isPhotoLeft ? -0.02 : 0.02,
+    scale: 1.16 * (isMobile ? 0.92 : 1.0),
+  };
+
+  // 4. STAGE 3 & 4: CAMERA MOVES TO THE SIDE (Remains Large)
+  const sideApproachPose = {
+    camX: companionX * 0.35,
+    camY: isMobile ? 0.15 : 0.0,
+    camZ: 2.3 + (isMobile ? 0.35 : 0),
+    targetX: companionX * 0.2,
+    targetY: isMobile ? 0.1 : 0.0,
+    targetZ: 0.0,
+    modelX: companionX,
+    modelY: companionY,
+    modelZ: 0.08,
+    modelRotX: aimPitch * 0.6,
+    modelRotY: targetAimedYaw * 0.7,
+    modelRotZ: 0.0,
+    scale: 1.18 * (isMobile ? 0.92 : 1.0),
+  };
+
+  // 5. STAGE 5: LENS AIMS DIRECTLY AT THE PHOTO
+  const aimedPose = {
+    camX: companionX * 0.35,
+    camY: isMobile ? 0.15 : 0.0,
+    camZ: 2.25 + (isMobile ? 0.35 : 0),
+    targetX: companionX * 0.3,
+    targetY: isMobile ? 0.1 : 0.0,
+    targetZ: 0.0,
+    modelX: companionX,
+    modelY: companionY,
+    modelZ: 0.1,
+    modelRotX: aimPitch, // ◉ AIMED AT PHOTO PITCH
+    modelRotY: targetAimedYaw, // ◉ LENS DIRECTLY AIMED AT PHOTOGRAPH
+    modelRotZ: isPhotoLeft ? 0.02 : -0.02,
+    scale: 1.2 * (isMobile ? 0.95 : 1.0),
+  };
+
+  // 6. STAGE 6: SETTLE PAUSE (Camera holds still in sharp focus aimed at photo)
+  const settlePose = {
+    camX: companionX * 0.35,
+    camY: isMobile ? 0.15 : 0.0,
+    camZ: 2.25 + (isMobile ? 0.35 : 0),
+    targetX: companionX * 0.3,
+    targetY: isMobile ? 0.1 : 0.0,
+    targetZ: 0.0,
+    modelX: companionX,
+    modelY: companionY,
+    modelZ: 0.1,
+    modelRotX: aimPitch,
+    modelRotY: targetAimedYaw,
+    modelRotZ: isPhotoLeft ? 0.02 : -0.02,
+    scale: 1.2 * (isMobile ? 0.95 : 1.0),
+  };
+
+  // 7. STAGE 7: SUBTLE SHUTTER RECOIL (Micro physical impulse)
+  const captureKickPose = {
+    camX: companionX * 0.35,
+    camY: isMobile ? 0.15 : 0.0,
+    camZ: 2.27 + (isMobile ? 0.35 : 0),
+    targetX: companionX * 0.3,
+    targetY: isMobile ? 0.1 : 0.0,
+    targetZ: 0.0,
+    modelX: companionX,
+    modelY: companionY,
+    modelZ: 0.06, // Tiny shutter recoil
+    modelRotX: aimPitch + 0.015,
+    modelRotY: targetAimedYaw,
+    modelRotZ: 0.0,
+    scale: 1.18 * (isMobile ? 0.94 : 1.0),
+  };
+
+  // 8. STAGE 8: CAMERA REMAINS BESIDE PHOTO (Holds in full 3D beauty)
+  const holdPose = {
+    camX: companionX * 0.35,
+    camY: isMobile ? 0.15 : 0.0,
+    camZ: 2.25 + (isMobile ? 0.35 : 0),
+    targetX: companionX * 0.3,
+    targetY: isMobile ? 0.1 : 0.0,
+    targetZ: 0.0,
+    modelX: companionX,
+    modelY: companionY,
+    modelZ: 0.1,
+    modelRotX: aimPitch,
+    modelRotY: targetAimedYaw, // Lens remains aimed at photo
+    modelRotZ: isPhotoLeft ? 0.02 : -0.02,
+    scale: 1.2 * (isMobile ? 0.95 : 1.0),
+  };
+
+  // 9. STAGE 9 & 10: CAMERA TRAVELS ONWARD TO NEXT MEMORY (NO RESET!)
+  // Smoothly departs from current side pose toward the next approach angle
+  const exitPose = {
+    camX: companionX * 0.45,
+    camY: isMobile ? 0.15 : -0.05,
+    camZ: 2.38 + (isMobile ? 0.35 : 0),
+    targetX: 0.0,
+    targetY: 0.0,
+    targetZ: 0.0,
+    modelX: companionX * 1.15,
+    modelY: companionY * 0.6 - 0.06,
+    modelZ: -0.08,
+    modelRotX: 0.12,
+    modelRotY: targetAimedYaw + (isPhotoLeft ? 0.45 : -0.45),
     modelRotZ: isPhotoLeft ? 0.03 : -0.03,
-    scale: 1.02 * (isMobile ? 0.82 : 1.0),
+    scale: 1.12 * (isMobile ? 0.88 : 1.0),
   };
 
   return {
-    entryPose,
+    startPose,
     travelPose,
-    facingPose,
-    lensApproachPose,
-    lensClosePose,
+    downwardPose,
+    sideApproachPose,
+    aimedPose,
+    settlePose,
     captureKickPose,
-    companionPose,
+    holdPose,
     exitPose,
-    captureRotY,
   };
 }
 
-// Master triggers store
 let activeTriggers = [];
 
 /**
- * Initializes the overarching chapter timeline.
- * Handles Hero prologue, video reels, and final epilogue return.
+ * Initializes master ScrollTriggers for overarching sections:
+ * Hero prologue, Motion In Time, and Final Epilogue Return.
  */
 export function initCameraScrollTriggers() {
   activeTriggers.forEach((t) => t.kill && t.kill());
   activeTriggers = [];
 
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-  const isTablet = typeof window !== "undefined" && window.innerWidth >= 768 && window.innerWidth < 1024;
   const P = CAMERA_POSES;
 
   // 1. CHAPTER 01: THROUGH A LENS (Hero Prologue)
-  // Large center hero camera -> turns smoothly into 3/4 travel exit
+  // Large center hero camera -> smoothly transitions into downward travel exit
   const t1 = ScrollTrigger.create({
     trigger: "#chapter-01",
     start: "top top",
     end: "bottom top",
-    scrub: 1.0,
+    scrub: 1.2,
     onUpdate: (self) => {
       const p = self.progress;
       const eased = 0.5 - 0.5 * Math.cos(p * Math.PI);
@@ -403,12 +419,11 @@ export function initCameraScrollTriggers() {
   activeTriggers.push(t1);
 
   // 2. SPECIAL CHAPTER: MOTION IN TIME (Video Archive)
-  // Elevated perspective over video reels
   const tMotion = ScrollTrigger.create({
     trigger: "#chapter-motion",
     start: "top bottom",
     end: "bottom top",
-    scrub: 1.0,
+    scrub: 1.2,
     onUpdate: (self) => {
       const p = self.progress;
       const eased = 0.5 - 0.5 * Math.cos(p * Math.PI);
@@ -437,12 +452,12 @@ export function initCameraScrollTriggers() {
   activeTriggers.push(tMotion);
 
   // 3. FINAL CHAPTER: SOME MOMENTS STAY (Epilogue)
-  // Reverses journey, returns to exact center hero pose, completing 720° rotation
+  // Continuous 720° (4*PI) return to exact center hero pose
   const tFinal = ScrollTrigger.create({
     trigger: "#final-chapter",
     start: "top bottom",
     end: "bottom bottom",
-    scrub: 1.0,
+    scrub: 1.2,
     onUpdate: (self) => {
       const p = self.progress;
       const target = P.epilogueReturn;
