@@ -1,0 +1,6 @@
+{
+  "framework": "vite",
+  "installCommand": "cd Khushi && npm install",
+  "buildCommand": "cd Khushi && npm run build",
+  "outputDirectory": "Khushi/dist"
+}
