@@ -6,10 +6,9 @@ export default function PageLoader({ onLoaded }) {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    // Smooth progress counter simulation synchronized with asset hydration
     let count = 0;
     const interval = setInterval(() => {
-      count += Math.floor(Math.random() * 8) + 4;
+      count += Math.floor(Math.random() * 14) + 8;
       if (count >= 100) {
         count = 100;
         setProgress(100);
@@ -18,7 +17,7 @@ export default function PageLoader({ onLoaded }) {
         // Fade out loader smoothly
         gsap.to("#page-loader", {
           opacity: 0,
-          duration: 1.2,
+          duration: 0.8,
           ease: "power2.inOut",
           onComplete: () => {
             setHidden(true);
@@ -28,9 +27,19 @@ export default function PageLoader({ onLoaded }) {
       } else {
         setProgress(count);
       }
-    }, 40);
+    }, 35);
 
-    return () => clearInterval(interval);
+    // Safety timeout: max 2.5 seconds fallback
+    const safetyTimeout = setTimeout(() => {
+      setProgress(100);
+      setHidden(true);
+      if (onLoaded) onLoaded();
+    }, 2500);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(safetyTimeout);
+    };
   }, [onLoaded]);
 
   if (hidden) return null;
@@ -38,7 +47,9 @@ export default function PageLoader({ onLoaded }) {
   return (
     <div
       id="page-loader"
-      className="fixed inset-0 z-50 bg-[#060608] flex flex-col items-center justify-center select-none"
+      className={`fixed inset-0 z-50 bg-[#060608] flex flex-col items-center justify-center select-none ${
+        progress >= 100 ? "pointer-events-none" : ""
+      }`}
     >
       <div className="flex flex-col items-center max-w-sm px-6 text-center">
         {/* Film aperture ring icon */}

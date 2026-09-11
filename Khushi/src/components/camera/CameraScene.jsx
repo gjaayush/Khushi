@@ -1,10 +1,32 @@
-import { Suspense, useRef, useEffect, useState } from "react";
+import React, { Suspense, useRef, useEffect, useState } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import CameraModel from "./CameraModel";
 import CameraLights from "./CameraLights";
 import CameraEnvironment from "./CameraEnvironment";
 import { cameraState } from "../../animations/cameraTimeline";
+
+class ThreeErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.warn("CameraScene 3D error caught by boundary:", error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
 
 function CameraController() {
   const currentTarget = useRef(new THREE.Vector3(0, 0, 0));
@@ -80,29 +102,31 @@ export default function CameraScene() {
       className="camera-canvas-container fixed inset-0 pointer-events-none z-10 w-full h-full overflow-hidden"
       aria-hidden="true"
     >
-      <Canvas
-        shadows
-        gl={{
-          alpha: true,
-          antialias: true,
-          powerPreference: "high-performance",
-          toneMapping: THREE.ACESFilmicToneMapping,
-          toneMappingExposure: 1.15,
-        }}
-        camera={{
-          position: [0, 0, 2.3],
-          fov: fov,
-          near: 0.02,
-          far: 40,
-        }}
-      >
-        <Suspense fallback={null}>
-          <CameraController />
-          <CameraLights />
-          <CameraEnvironment />
-          <CameraModel />
-        </Suspense>
-      </Canvas>
+      <ThreeErrorBoundary>
+        <Canvas
+          shadows
+          gl={{
+            alpha: true,
+            antialias: true,
+            powerPreference: "high-performance",
+            toneMapping: THREE.ACESFilmicToneMapping,
+            toneMappingExposure: 1.15,
+          }}
+          camera={{
+            position: [0, 0, 2.3],
+            fov: fov,
+            near: 0.02,
+            far: 40,
+          }}
+        >
+          <Suspense fallback={null}>
+            <CameraController />
+            <CameraLights />
+            <CameraEnvironment />
+            <CameraModel />
+          </Suspense>
+        </Canvas>
+      </ThreeErrorBoundary>
     </div>
   );
 }
