@@ -6,8 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Khushi — A Camera Remembers Moments</title>
     <meta name="description" content="A camera doesn't remember everything. It remembers moments. An interactive cinematic photographic memory experience." />
+
+    <!-- DNS Prefetch for Google Fonts -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Preload critical 3D model — starts downloading in parallel with JS parse -->
+    <link rel="preload" href="/models/pentax_k-1_dslr.glb" as="fetch" crossorigin="anonymous" />
+
+    <!-- Preload first hero image for above-the-fold content -->
+    <link rel="preload" href="/media/Photo1.jpeg" as="image" />
+
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   </head>
   <body class="bg-[#070709] text-[#e8e6e3] antialiased selection:bg-[#c8a97e]/30 selection:text-[#f3efe6]">

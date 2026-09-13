@@ -98,6 +98,7 @@ function VideoCard({
           loop
           muted={isMuted}
           playsInline
+          preload="none"
           autoPlay
           onTimeUpdate={handleTimeUpdate}
           className="w-full h-full object-cover object-center block group-hover:scale-[1.015] transition-transform duration-700 ease-out"

@@ -78,16 +78,20 @@ function CameraController() {
 export default function CameraScene() {
   const containerRef = useRef();
   const [fov, setFov] = useState(28);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
       const w = window.innerWidth;
       if (w < 640) {
         setFov(40); // Mobile: balanced framing
+        setIsMobile(true);
       } else if (w < 1024) {
         setFov(34); // iPad / Tablet
+        setIsMobile(false);
       } else {
         setFov(28); // Desktop: cinematic telephoto compression
+        setIsMobile(false);
       }
     };
 
@@ -104,13 +108,16 @@ export default function CameraScene() {
     >
       <ThreeErrorBoundary>
         <Canvas
-          shadows
+          shadows={!isMobile}
+          dpr={isMobile ? [1, 1.5] : [1, 2]}
           gl={{
             alpha: true,
-            antialias: true,
+            antialias: !isMobile,
             powerPreference: "high-performance",
             toneMapping: THREE.ACESFilmicToneMapping,
             toneMappingExposure: 1.15,
+            // Reduce precision on mobile to save GPU memory bandwidth
+            precision: isMobile ? "mediump" : "highp",
           }}
           camera={{
             position: [0, 0, 2.3],

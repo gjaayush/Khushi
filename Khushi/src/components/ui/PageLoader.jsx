@@ -1,43 +1,81 @@
 import { useEffect, useState } from "react";
 import gsap from "gsap";
 
+// Critical assets to preload — GLB model + first visible images
+const CRITICAL_ASSETS = [
+  "/models/pentax_k-1_dslr.glb",
+  "/media/Photo1.jpeg",
+  "/media/Photo2.jpeg",
+  "/media/photo3.jpeg",
+  "/media/photo4.jpeg",
+];
+
+async function preloadAsset(url, onProgress) {
+  try {
+    const response = await fetch(url);
+    const reader = response.body.getReader();
+    const contentLength = parseInt(response.headers.get("Content-Length") || "0");
+    let received = 0;
+
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.length;
+      if (contentLength > 0) {
+        onProgress(received / contentLength);
+      }
+    }
+  } catch {
+    // On any error, mark as complete so the loader never gets stuck
+    onProgress(1);
+  }
+}
+
 export default function PageLoader({ onLoaded }) {
   const [progress, setProgress] = useState(0);
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
-    let count = 0;
-    const interval = setInterval(() => {
-      count += Math.floor(Math.random() * 14) + 8;
-      if (count >= 100) {
-        count = 100;
-        setProgress(100);
-        clearInterval(interval);
+    const progresses = new Array(CRITICAL_ASSETS.length).fill(0);
 
-        // Fade out loader smoothly
-        gsap.to("#page-loader", {
-          opacity: 0,
-          duration: 0.8,
-          ease: "power2.inOut",
-          onComplete: () => {
-            setHidden(true);
-            if (onLoaded) onLoaded();
-          },
-        });
-      } else {
-        setProgress(count);
-      }
-    }, 35);
+    const updateTotal = (idx, val) => {
+      progresses[idx] = val;
+      // Weighted average: GLB is the heaviest (weight 3), images are lighter (weight 1 each)
+      const weights = [3, 1, 1, 1, 1];
+      const totalWeight = weights.reduce((a, b) => a + b, 0);
+      const weighted = progresses.reduce((sum, p, i) => sum + p * weights[i], 0);
+      const total = Math.min(99, Math.round((weighted / totalWeight) * 100));
+      setProgress(total);
+    };
 
-    // Safety timeout: max 2.5 seconds fallback
+    const promises = CRITICAL_ASSETS.map((url, idx) =>
+      preloadAsset(url, (p) => updateTotal(idx, p))
+    );
+
+    // Safety timeout — if assets take > 8s, force dismiss anyway
     const safetyTimeout = setTimeout(() => {
       setProgress(100);
-      setHidden(true);
-      if (onLoaded) onLoaded();
-    }, 2500);
+      dismiss();
+    }, 8000);
+
+    const dismiss = () => {
+      clearTimeout(safetyTimeout);
+      setProgress(100);
+      gsap.to("#page-loader", {
+        opacity: 0,
+        duration: 0.8,
+        ease: "power2.inOut",
+        onComplete: () => {
+          setHidden(true);
+          if (onLoaded) onLoaded();
+        },
+      });
+    };
+
+    Promise.all(promises).then(dismiss);
 
     return () => {
-      clearInterval(interval);
       clearTimeout(safetyTimeout);
     };
   }, [onLoaded]);
@@ -76,7 +114,7 @@ export default function PageLoader({ onLoaded }) {
         {/* Progress bar */}
         <div className="w-48 h-[1.5px] bg-white/10 overflow-hidden mb-4">
           <div
-            className="h-full bg-[#c8a97e] transition-all duration-100 ease-out"
+            className="h-full bg-[#c8a97e] transition-all duration-200 ease-out"
             style={{ width: `${progress}%` }}
           />
         </div>
